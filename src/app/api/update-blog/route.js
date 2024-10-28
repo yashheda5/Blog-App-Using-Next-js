@@ -1,7 +1,7 @@
 import connectToDB from "@/database";
 import { NextResponse } from "next/server";
 import Joi from 'joi';
-import Blog from "@/models/Blog"; // Make sure this path is correct
+import Blog from "@/models/blog";
 
 const EditBlog = Joi.object({
     title: Joi.string().required(),
