@@ -3,16 +3,15 @@ import React, { useEffect, useState } from 'react'
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
 
 import AddNewBlog from '../add-new-blog'
 import { Button } from '../ui/button'
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 import { Label } from '@radix-ui/react-label'
+import Joi from 'joi'
 const initialBlogFormData = {
     title: '',
     description: ''
@@ -22,19 +21,23 @@ export default function BlogOverview({ blogList }) {
     const [loading, setLoading] = useState(false);
     const [blogFormData, setBlogFormData] = useState(initialBlogFormData);
     const [openBlogDialog, setOpenBlogDialog] = useState(false);
-    console.log(blogFormData);
+    const [currentEditedBlogID, setCurrentEditedBlogID] = useState(null);
 
-    const router=useRouter();
-    useEffect(()=>{
+    const router = useRouter();
+    useEffect(() => {
         router.refresh()
-    },[])
+    }, [])
+
     async function handleSaveBlogData() {
-        setLoading(true); // Set loading to true when starting the request
+        setLoading(true);
         try {
-            const apiResponse = await fetch('/api/add-blog', { // Corrected the URL path
+            const apiResponse = currentEditedBlogID !== null ? await fetch(`/api/update-blog?id=${currentEditedBlogID}`, {
+                method: 'PUT',
+                body: JSON.stringify(blogFormData)
+            }) : await fetch('/api/add-blog', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json' // Added headers to specify JSON content
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(blogFormData)
             });
@@ -43,11 +46,14 @@ export default function BlogOverview({ blogList }) {
         } catch (e) {
             console.log(e);
         } finally {
-            setLoading(false); // Ensure loading is set to false after request completes
+            setLoading(false);
             setBlogFormData(initialBlogFormData);
+            setCurrentEditedBlogID(null);
+            setOpenBlogDialog(false)
             router.refresh();
         }
     }
+
     async function handleDeleteBlogById(getCurrentId) {
         try {
             const apiResponse = await fetch(`/api/delete-blog?id=${getCurrentId}`, {
@@ -61,7 +67,15 @@ export default function BlogOverview({ blogList }) {
             console.log(e);
         }
     }
-    
+
+    function handleEdit(getCurrentBlog) {
+        setCurrentEditedBlogID(getCurrentBlog._id);
+        setBlogFormData({
+            title: getCurrentBlog?.title,
+            description: getCurrentBlog?.description
+        });
+        setOpenBlogDialog(true);
+    }
 
     return (
         <div className="min-h-screen flex flex-col gap-10 bg-gradient-to-r from-purple-500 to-blue-600 p-6">
@@ -74,6 +88,8 @@ export default function BlogOverview({ blogList }) {
                     handleSaveBlogData={handleSaveBlogData}
                     openBlogDialog={openBlogDialog}
                     setOpenBlogDialog={setOpenBlogDialog}
+                    currentEditedBlogID={currentEditedBlogID}
+                    setCurrentEditedBlogID={setCurrentEditedBlogID}
                 />
             </div>
 
@@ -81,22 +97,20 @@ export default function BlogOverview({ blogList }) {
                 {
                     blogList && blogList.length > 0 ?
                         blogList.map(blogItem =>
-                            <Card>
+                            <Card key={blogItem._id}>
                                 <CardHeader>
                                     <CardTitle>{blogItem.title}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <p>{blogItem.description}</p>
                                     <div className='mt-5 flex gap-5 justify-center items-center'>
-                                        <Button>Edit</Button>
-                                        <Button onClick={()=>handleDeleteBlogById(blogItem._id)}>Delete</Button>
+                                        <Button onClick={() => handleEdit(blogItem)}>Edit</Button>
+                                        <Button onClick={() => handleDeleteBlogById(blogItem._id)}>Delete</Button>
                                     </div>
                                 </CardContent>
-                                
                             </Card>
-
                         )
-                        : <Label className='text-3xl font-extrabold  '>No Blog found Please add one </Label>
+                        : <Label className='text-3xl font-extrabold'>No Blog found Please add one</Label>
                 }
             </div>
         </div>

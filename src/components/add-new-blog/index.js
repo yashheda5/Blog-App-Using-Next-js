@@ -12,22 +12,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function AddNewBlog({ loading, setLoading, blogFormData, setBlogFormData, handleSaveBlogData, openBlogDialog, setOpenBlogDialog }) {
+export default function AddNewBlog({ setCurrentEditedBlogID, currentEditedBlogID, loading, setLoading, blogFormData, setBlogFormData, handleSaveBlogData, openBlogDialog, setOpenBlogDialog }) {
 
-  // Wrap handleSaveBlogData to close the dialog
+  // Wrap handleSaveBlogData to close the dialog and reset currentEditedBlogID
   const handleSave = async () => {
     await handleSaveBlogData();  // Save data
     setOpenBlogDialog(false);    // Close dialog after saving
+    setCurrentEditedBlogID(null); // Reset currentEditedBlogID
   };
 
   return (
     <Dialog open={openBlogDialog} onOpenChange={setOpenBlogDialog}>
       <DialogTrigger asChild>
-        <Button  onClick={() => setOpenBlogDialog(true)}>Add New Blog</Button>
+        <Button onClick={() => {
+          setOpenBlogDialog(true);
+          setCurrentEditedBlogID(null); // Ensure it's null when adding a new blog
+          setBlogFormData({ title: null, description: null }); // Reset title and description
+        }}>
+          Add New Blog
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Blog</DialogTitle>
+          <DialogTitle>{currentEditedBlogID ? "Edit Blog" : "Add Blog"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
