@@ -1,8 +1,9 @@
-import React from 'react';
-import BlogOverview from '@/components/blog-overview';
 
+import React from 'react'
+import BlogOverview from '@/components/blog-overview'
 async function fetchListOfBlogs() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
   try {
     const apiResponse = await fetch(`${baseUrl}/api/get-blog`, {
       method: 'GET',
@@ -11,12 +12,14 @@ async function fetchListOfBlogs() {
     const result = await apiResponse.json();
     return result?.data;
   } catch (e) {
-    throw new Error(e);
+    throw new Error(e.message);
   }
 }
 
 export default async function Blogs() {
-  const blogList = await fetchListOfBlogs();
-  console.log(blogList, 'blogList');
-  return <BlogOverview blogList={blogList} />;
+  const blogList = await fetchListOfBlogs()
+  console.log(blogList,'blogList')
+  return (
+   <BlogOverview blogList={blogList}/>
+  )
 }
